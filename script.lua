@@ -35,7 +35,7 @@ local function setObjectAt(postion, object)
     board[#board - postion[2]+1][postion[1]] = object;
 end
 
-local function canMove(postion)
+local function canMoveTo(postion)
     local translated_position = {postion[1], (#board - postion[2]+1)};
 
     if (translated_position[1] < 1) or (translated_position[1] > #(board[1])) then -- x not in range.
@@ -59,7 +59,7 @@ local function move(x,y)
     local future_postion = {player_position[1] + x, player_position[2] + y};
     print(string.format("Attempted to move to: (%d, %d)", future_postion[1], future_postion[2]));
 
-    if (not canMove(future_postion)) then
+    if (not canMoveTo(future_postion)) then
         return;
     end
     setObjectAt(player_position, empty_space_character);
@@ -96,7 +96,7 @@ local function main()
     setObjectAt({7,5},block_character);
     
     renderBoard();
-    canMove({5,100});
+    canMoveTo({5,100});
     
 
 end
