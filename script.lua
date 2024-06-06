@@ -1,6 +1,6 @@
 -- tty_mode should be set to false for it to be playable on napture.
 -- When true it is playable in terminal.
-local tty_mode = true;
+local tty_mode = false;
 
 local empty_space_character = "⬜";
 local block_character = "⬛";
@@ -30,8 +30,23 @@ end
 local function objectAt(postion)
     return board[#board - postion[2]+1][postion[1]];
 end
+
 local function setObjectAt(postion, object)
     board[#board - postion[2]+1][postion[1]] = object;
+end
+
+local function canMove(postion)
+    local translated_position = {postion[1], (#board - postion[2]+1)};
+
+    if (translated_position[1] < 1) or (translated_position[1] > #(board[1])) then -- x not in range.
+        return false;
+    elseif (translated_position[2] > #board) or (translated_position[2] < 1) then -- y not in range.
+        return false;
+    elseif objectAt(postion) == block_character then -- if it's a block, you cannot move there.
+        return false;
+    end
+
+    return true;
 end
 
 
@@ -44,7 +59,7 @@ local function move(x,y)
     local future_postion = {player_position[1] + x, player_position[2] + y};
     print(string.format("Attempted to move to: (%d, %d)", future_postion[1], future_postion[2]));
 
-    if objectAt(future_postion) == block_character then
+    if (not canMove(future_postion)) then
         return;
     end
     setObjectAt(player_position, empty_space_character);
@@ -53,7 +68,12 @@ local function move(x,y)
     player_position = future_postion;
 end
 
-local function renderBoard()
+
+local function moveBlock(current_position, amount_to_move_by)
+    future_postion = {player_position[1] + amount_to_move_by[1], player_position[2] + amount_to_move_by[2]};
+end
+
+local function renderBoard()                                                
 
     local output = "";
 
@@ -74,7 +94,9 @@ local function main()
     setObjectAt({5,5},block_character);
     setObjectAt({6,5},block_character);
     setObjectAt({7,5},block_character);
+    
     renderBoard();
+    canMove({5,100});
     
 
 end
