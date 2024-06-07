@@ -1,9 +1,10 @@
 -- tty_mode should be set to false for it to be playable on napture.
 -- When true it is playable in terminal.
-local tty_mode = false;
+local tty_mode = true;
 
 local empty_space_character = "⬜";
-local block_character = "⬛";
+local block_character = "❎"
+local wall_character = "🧱"
 local player_character = "🙂";
 local player_position = {0,0};
 local board;
@@ -35,6 +36,7 @@ local function setObjectAt(postion, object)
     board[#board - postion[2]+1][postion[1]] = object;
 end
 
+
 local function canMoveTo(postion)
     local translated_position = {postion[1], (#board - postion[2]+1)};
 
@@ -42,13 +44,41 @@ local function canMoveTo(postion)
         return false;
     elseif (translated_position[2] > #board) or (translated_position[2] < 1) then -- y not in range.
         return false;
-    elseif objectAt(postion) == block_character then -- if it's a block, you cannot move there.
+    elseif objectAt(postion) == wall_character then -- if it's a block, you cannot move there.
         return false;
     end
-
     return true;
 end
 
+local function canMoveBlock(block_position, amount_to_move_by)
+    future_postion = {block_position[1] + amount_to_move_by[1], block_position[2] + amount_to_move_by[2]};
+    print(string.format("Testing (%d, %d)", future_postion[1], future_postion[2]));
+    if (not canMoveTo(future_postion)) then
+        return false;
+    elseif objectAt(future_postion) == block_character then
+        return canMoveBlock(future_postion, amount_to_move_by);
+    else
+        return true;
+    end
+
+end
+
+local function getRow(position) 
+    local translated_position = {position[1], (#board - position[2]+1)};
+    return board[translated_position[2]]; 
+end
+
+local function moveBlock(block_position, amount_to_move_by)
+    --[[
+        - Get direction
+        - Loop through until non block char
+        - Set all to blocks between player pos and the empty pos.
+    
+    if player_position[1] ~= 0 then
+        
+    elseif player_position[2] ~=0 then
+    end]]
+end   
 
 local function setPlayerPositon(new_postion)
     setObjectAt(new_postion, player_character)
@@ -61,6 +91,12 @@ local function move(x,y)
 
     if (not canMoveTo(future_postion)) then
         return;
+    elseif objectAt(future_postion) == block_character then
+        if (canMoveBlock(future_postion, {x,y})) then 
+            print("Hello World, this is a test.")
+            moveBlock(future_postion, {x,y})
+            return;
+        end
     end
     setObjectAt(player_position, empty_space_character);
     setObjectAt(future_postion, player_character);
@@ -68,10 +104,6 @@ local function move(x,y)
     player_position = future_postion;
 end
 
-
-local function moveBlock(current_position, amount_to_move_by)
-    future_postion = {player_position[1] + amount_to_move_by[1], player_position[2] + amount_to_move_by[2]};
-end
 
 local function renderBoard()                                                
 
@@ -91,12 +123,27 @@ end
 local function main() 
     generateBoard(10,10);
     setPlayerPositon({5,3});
-    setObjectAt({5,5},block_character);
-    setObjectAt({6,5},block_character);
-    setObjectAt({7,5},block_character);
+    setObjectAt({5,5},wall_character);
+    setObjectAt({6,5},wall_character);
+    setObjectAt({7,5},wall_character);
+    setObjectAt({3,4}, block_character);
+    setObjectAt({2,4}, block_character);
+
+    setObjectAt({2,3}, block_character);
+    setObjectAt({1,3}, block_character);
+    setObjectAt({10,3}, block_character);
+    --setObjectAt({1,4}, block_character);
+    
     
     renderBoard();
-    canMoveTo({5,100});
+
+    local test = getRow(player_position);
+    local output = "";
+
+    for i=1,#test do
+        output = output .. test[i]; 
+    end
+    print(output);
     
 
 end
