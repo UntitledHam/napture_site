@@ -1,6 +1,6 @@
 -- tty_mode should be set to false for it to be playable on napture.
 -- When true it is playable in terminal.
-local tty_mode = true;
+local tty_mode = false;
 
 local empty_space_character = "⬜";
 local block_character = "❎"
