@@ -84,9 +84,9 @@ local function moveBlock(player_position, amount_to_move_by)
     ]]
     if amount_to_move_by[1] == 1 then
         local row = getRow(player_position);
-        for i=1,#row do
+        for i=player_position[1],#row do
             if objectAt({i,player_position[2]}) == empty_space_character then
-                setObjectAt({#board-i,player_position[2]}, block_character);
+                setObjectAt({i,player_position[2]}, block_character);
                 return;
             end
         end
@@ -101,11 +101,18 @@ local function moveBlock(player_position, amount_to_move_by)
         end
     elseif amount_to_move_by[2] == 1 then
         local col = getCol(player_position);
-        for i=#board-player_position[1] +1,#board,1 do
-            print(string.format("Testing (%d,%d), %s.",player_position[1], i, objectAt({player_position[1], i})));
-            if objectAt({player_position[1],i}) == empty_space_character then
-                setObjectAt({player_position[1],#board-i+1}, block_character);
-                return;
+        for i=player_position[2], #col, 1 do
+            if objectAt({player_position[1], i}) == empty_space_character then
+                setObjectAt({player_position[1], i}, block_character);
+                return
+            end
+        end
+    elseif amount_to_move_by[2] == -1 then
+        local col = getCol(player_position);
+        for i=player_position[2], 1, -1 do
+            if objectAt({player_position[1], i}) == empty_space_character then
+                setObjectAt({player_position[1], i}, block_character);
+                return
             end
         end
     end
@@ -151,13 +158,13 @@ end
 
 local function main() 
     generateBoard(10,10);
-    setPlayerPositon({5,3});
+    setPlayerPositon({8,2});
     setObjectAt({5,5},wall_character);
     setObjectAt({6,5},wall_character);
     setObjectAt({7,5},wall_character);
     setObjectAt({8,4}, block_character);
     setObjectAt({7,4}, block_character);
-    --setObjectAt({1,4}, block_character);
+    setObjectAt({1,4}, block_character);
 
     
     
