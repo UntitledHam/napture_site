@@ -11,7 +11,7 @@ local board;
 
 
 
-local levels = require("levels");
+local levels = require("./levels");
 
 local text_box = nil;
 if (not tty_mode) then text_box = get("block" ) end
