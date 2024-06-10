@@ -9,22 +9,26 @@ local player_character = "🙂";
 local player_position = {0,0};
 local board;
 
+
+
+local levels = require("levels");
+
 local text_box = nil;
 if (not tty_mode) then text_box = get("block" ) end
 
 
-local function generateBoard(height, width)
+local function generateBoard(size)
     local new_board = {};
-    for i = 1,width do
+    for i = 1,size[1] do
         local new_col = {};
-        for j = 1, height do
+        for j = 1, size[2] do
             table.insert(new_col, empty_space_character);
         end
         table.insert(new_board, new_col);
 
     end     
 
-    board = new_board;
+    return new_board;
 end
 
 
@@ -84,7 +88,7 @@ local function moveBlock(player_position, amount_to_move_by)
     ]]
     if amount_to_move_by[1] == 1 then
         local row = getRow(player_position);
-        for i=player_position[1],#row do
+        for i=player_position[1],#row, 1 do
             if objectAt({i,player_position[2]}) == empty_space_character then
                 setObjectAt({i,player_position[2]}, block_character);
                 return;
@@ -116,6 +120,8 @@ local function moveBlock(player_position, amount_to_move_by)
             end
         end
     end
+
+
 end   
 
 local function setPlayerPositon(new_postion)
@@ -156,21 +162,27 @@ local function renderBoard()
     else print(output) end
 end
 
-local function main() 
-    generateBoard(10,10);
-    setPlayerPositon({8,2});
-    setObjectAt({5,5},wall_character);
-    setObjectAt({6,5},wall_character);
-    setObjectAt({7,5},wall_character);
-    setObjectAt({8,4}, block_character);
-    setObjectAt({7,4}, block_character);
-    setObjectAt({1,4}, block_character);
+local function generate_level(level)
+    board = generateBoard(level["size"]);
+    setPlayerPositon(level["spawn"])
 
-    
-    
-    
+    for i=1, #level["blocks"] do
+        setObjectAt(level["blocks"][i], block_character);
+    end
+    for i=1, #level["walls"] do
+        setObjectAt(level["walls"][i], wall_character);
+    end
     renderBoard();
-    
+
+
+end
+
+local function load_level(level) 
+    generate_level(levels[level]);
+end
+
+local function main() 
+    load_level(2);
 
 end
 
