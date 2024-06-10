@@ -2,26 +2,58 @@
 -- When true it is playable in terminal.
 local tty_mode = false;
 
+
 local empty_space_character = "⬜";
 local block_character = "❎"
 local wall_character = "🧱"
 local player_character = "🙂";
-local player_position = {0,0};
+local flagpole_character = "🏁";
+local top_text = "";
+local current_level = 1;
+local player_position = {1,1};
 local board;
 
 
 
-local levels = require("./levels");
+local levels = {
+    {
+        size = {5,7},
+        walls = {{1,4}, {2,4}, {4,4}, {5,4}},
+        blocks = {{3,4}},
+        spawn = {3,1},
+        flagpole = {3,7},
+        text = string.format("You can push blocks (%s) by running into them.\nReach the flagpole (%s) to win!", block_character, flagpole_character)
+    },
+
+    {
+        size = {5,7},
+        walls = {{3,3}, {4,3}, {5,3}, {5,4}, {2,5}, {4,5}, {5,5}, {1,6}, {2,6}, {4,6}, {5,6}, {1,7}, {2,7}, {4,7}, {5,7}},
+        blocks = {{1,3},{2,4}},
+        spawn = {3,1},
+        flagpole = {3,7},
+        text = string.format("Walls (%s) will block your way.\nTry and make it around them!", wall_character)
+    },
+    {
+        size = {10,10};
+        walls = {},
+        blocks = {{5,3},{6,3},{7,3},{8,3}},
+        spawn = {5,5},
+        flagpole = {5,10},
+        text = "Test map\nNot Implemented Yet :3"
+
+    }
+
+};
 
 local text_box = nil;
-if (not tty_mode) then text_box = get("block" ) end
+if (not tty_mode) then text_box = get("block") end
 
 
 local function generateBoard(size)
     local new_board = {};
-    for i = 1,size[1] do
+    for i = 1,size[2] do
         local new_col = {};
-        for j = 1, size[2] do
+        for j = 1, size[1] do
             table.insert(new_col, empty_space_character);
         end
         table.insert(new_board, new_col);
@@ -40,6 +72,63 @@ local function setObjectAt(position, object)
     board[#board - position[2]+1][position[1]] = object;
 end
 
+local function setPlayerPositon(new_postion)
+    setObjectAt(player_position, empty_space_character);
+    setObjectAt(new_postion, player_character)
+    player_position = new_postion;
+end
+
+local function print_to_screen(content)
+    if not tty_mode then text_box.set_content(content)
+    else print(content) end
+end
+
+local function renderBoard()                                                
+
+    local output = top_text .. "\n\n";
+
+    for i = 1, #board do
+        for j = 1, #board[i] do 
+            output = output .. board[i][j]
+        end
+        output = output .. "\n";
+    end
+    
+    print_to_screen(output);
+end
+
+local function generate_level(level)
+    board = generateBoard(level["size"]);
+
+    for i=1, #level["blocks"] do
+        setObjectAt(level["blocks"][i], block_character);
+    end
+    for i=1, #level["walls"] do
+        setObjectAt(level["walls"][i], wall_character);
+    end
+
+    setObjectAt(level["flagpole"], flagpole_character);
+    top_text = level["text"];
+    setPlayerPositon(level["spawn"]);
+    renderBoard();
+
+
+end
+
+local function load_level(level) 
+    current_level = level;
+    generate_level(levels[level]);
+end
+
+local function next_level()
+    current_level = current_level + 1;
+    if current_level > #levels then
+        print_to_screen("You Win!!!");
+        current_level = 0;
+        os.exit();
+    end
+    generate_level(levels[current_level]);
+end
 
 local function canMoveTo(postion)
     local translated_position = {postion[1], (#board - postion[2]+1)};
@@ -56,8 +145,7 @@ end
 
 local function canMoveBlock(block_position, amount_to_move_by)
     local future_postion = {block_position[1] + amount_to_move_by[1], block_position[2] + amount_to_move_by[2]};
-    print(string.format("Testing (%d, %d)", future_postion[1], future_postion[2]));
-    if (not canMoveTo(future_postion)) then
+    if (not canMoveTo(future_postion) or objectAt(future_postion) == flagpole_character) then
         return false;
     elseif objectAt(future_postion) == block_character then
         return canMoveBlock(future_postion, amount_to_move_by);
@@ -124,11 +212,6 @@ local function moveBlock(player_position, amount_to_move_by)
 
 end   
 
-local function setPlayerPositon(new_postion)
-    setObjectAt(new_postion, player_character)
-    player_position = new_postion;
-end
-
 local function move(amount_to_move_by)
     local future_postion = {player_position[1] + amount_to_move_by[1], player_position[2] + amount_to_move_by[2]};
     if (not canMoveTo(future_postion)) then
@@ -139,6 +222,10 @@ local function move(amount_to_move_by)
         else
             moveBlock(player_position,amount_to_move_by);
         end
+    elseif objectAt(future_postion) == flagpole_character then
+        next_level();
+        future_postion = player_position
+        
     end
     setObjectAt(player_position, empty_space_character);
     setObjectAt(future_postion, player_character);
@@ -147,42 +234,9 @@ local function move(amount_to_move_by)
 end
 
 
-local function renderBoard()                                                
-
-    local output = "";
-
-    for i = 1, #board do
-        for j = 1, #board[i] do 
-            output = output .. board[i][j]
-        end
-        output = output .. "\n";
-    end
-    
-    if not tty_mode then text_box.set_content(output)
-    else print(output) end
-end
-
-local function generate_level(level)
-    board = generateBoard(level["size"]);
-    setPlayerPositon(level["spawn"])
-
-    for i=1, #level["blocks"] do
-        setObjectAt(level["blocks"][i], block_character);
-    end
-    for i=1, #level["walls"] do
-        setObjectAt(level["walls"][i], wall_character);
-    end
-    renderBoard();
-
-
-end
-
-local function load_level(level) 
-    generate_level(levels[level]);
-end
 
 local function main() 
-    load_level(2);
+    load_level(current_level);
 
 end
 
